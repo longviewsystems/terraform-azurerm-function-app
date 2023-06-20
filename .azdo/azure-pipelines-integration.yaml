@@ -1,0 +1,107 @@
+trigger:
+  branches:
+    include:
+    - main
+
+pr:
+  branches:
+    include:
+    - main
+  drafts: false
+
+variables:
+  - template: templates/standard_variables.yaml
+  # - name: KV
+  #   value: "inf-hub-usw2-kv01"
+  - group: az-infrastructure-module-test
+  
+pool: 'krux-private-agent-pool-linux'
+
+stages:
+  - stage:
+    displayName: 'Validate Configuration'
+    condition: and(succeeded(), eq(variables.isPR, 'true'))
+    jobs:
+  
+    - job: ValidateConfig
+      displayName: Check Access
+      steps:
+      - bash: |
+          go version
+          terragrunt -version
+          terraform -version
+          tflint --version    
+        displayName: Tool versions  
+      - bash: |
+            az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+            az account set --subscription $ARM_SUBSCRIPTION_ID
+            az account list --output table
+        workingDirectory: $(System.DefaultWorkingDirectory)     
+        displayName: 'Test Az SP Login'
+        env:
+            ARM_CLIENT_ID: $(variables.ARM_CLIENT_ID)
+            ARM_CLIENT_SECRET: $(sp-iac-tf-terratest)
+            ARM_SUBSCRIPTION_ID: $(variables.ARM_SUBSCRIPTION_ID)
+            ARM_TENANT_ID: $(variables.ARM_TENANT_ID)
+        continueOnError: true      
+    
+  - stage: pr_checks
+    displayName: "Static Code Analysis"
+    #Run prior to a PR only.
+    condition: and(succeeded(), eq(variables.isPR, 'true'))
+    jobs:
+    - job: tflint_job
+      displayName: Run TFLint
+      steps:
+      - bash: tflint --init
+        workingDirectory: $(System.DefaultWorkingDirectory)
+        displayName: 'Initialize TFLint'
+      - bash: terraform init  
+        workingDirectory: $(System.DefaultWorkingDirectory)
+        displayName: 'Initialize Terraform'        
+      - bash: |
+          tflint --format junit > $(System.DefaultWorkingDirectory)/TFLint-Report.xml
+        workingDirectory: $(System.DefaultWorkingDirectory)
+        displayName: 'Run TFLint'      
+        continueOnError: true  
+      - task: PublishTestResults@2
+        displayName: Publish tflint results
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: '**/*TFLint-Report.xml'
+          searchFolder: '$(System.DefaultWorkingDirectory)'
+          mergeTestResults: false
+          testRunTitle: Checkov Scan
+          failTaskOnFailedTests: false
+          publishRunAttachments: true 
+  - stage: terratest
+    displayName: "Terratest | Unit Testing"
+    # Only run during Pull Request
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - job: terratest_job
+        steps:
+          - bash: |
+              set -e
+              cd test
+              go test -timeout 45m
+  - stage: pr_completion
+    displayName: "Tag Release"
+    # Runs when Pull Request is complete and merged into main branch.
+    # Requires special permissions - https://docs.microsoft.com/en-us/azure/devops/organizations/security/permissions?view=azure-devops&tabs=preview-page#service-accounts
+    condition: eq(variables.isMain, 'true')
+    jobs:
+      - job: add_tag
+        displayName: Create Tag
+        steps:
+        - checkout: self
+          persistCredentials: true
+        # use $(Build.BuildNumber) to tag main branch when the PR is completed.
+        - bash: |
+            git config --global user.name "Project Collection Build Service"
+            git config --global user.email "ProjectCollectionBuildService@kacode.visualstudio.com"
+            git tag -a $BUILD_BUILDNUMBER -m "Tagged by workflow $BUILD_DEFINITIONNAME"
+            git push origin $BUILD_BUILDNUMBER        
+          workingDirectory: $(System.DefaultWorkingDirectory)     
+          displayName: 'Create Tag'

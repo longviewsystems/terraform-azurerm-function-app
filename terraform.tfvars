@@ -1,0 +1,5 @@
+function_name                 = "azurefuntiondemo32"
+resource_group_name           = "azurefuntiondemo32"
+location                      = "westus"
+service_plan_name             = "azurefuntiondemo32"
+function_storage_account_name = "azurefuntiondemo32"

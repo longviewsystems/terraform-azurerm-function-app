@@ -89,7 +89,7 @@ resource "azurerm_application_insights" "function_insights" {
   name                = var.function_name
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
-  application_type    = "other"
+  application_type    = var.application_type_insights
   workspace_id        = azurerm_log_analytics_workspace.function_analytics_workspace.id
 }
 

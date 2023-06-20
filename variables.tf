@@ -58,3 +58,9 @@ variable "create_diagnostics" {
   description = "If the value is false, no Diagnostics data will be sent the Storage Account set in diag_storage_account_id."
   default     = true
 }
+variable "application_type_insights" {
+  type        = string
+  description = "If the value is true, Application Insights will be enabled for the Function App."
+  default     = "other"
+}
+

@@ -39,5 +39,4 @@ terraform.rc
 # Lock files
 .terraform.lock.hcl
 
-# Variable files
-terraform.tfvars
+

@@ -1,21 +1,18 @@
 package main
 
 import (
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"log"
 	"testing"
-
-	"github.com/gruntwork-io/terratest/modules/terraform"
 )
 
 func TestTerraform(t *testing.T) {
-	options := &terraform.Options{
+	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "./fixture",
-		// VarFiles     : []string{"./test/fixture/test.tfvars"},            
+		VarFiles     : []string{"./fixture/test.tfvars"},
 	}
 
-	defer terraform.Destroy(t, options)
-
-	init, err := terraform.InitE(t, options)
+	init, err := terraform.InitE(t, terraformOptions)
 
 	if err != nil {
 		log.Println(err)
@@ -23,7 +20,7 @@ func TestTerraform(t *testing.T) {
 
 	t.Log(init)
 
-	plan, err := terraform.PlanE(t, options)
+	plan, err := terraform.PlanE(t, terraformOptions)
 
 	if err != nil {
 		log.Println(err)
@@ -31,11 +28,13 @@ func TestTerraform(t *testing.T) {
 
 	t.Log(plan)
 
-	apply, err := terraform.ApplyE(t, options)
+	apply, err := terraform.ApplyE(t, terraformOptions)
 
 	if err != nil {
 		log.Println(err)
 	}
 
 	t.Log(apply)
+
+	defer terraform.Destroy(t, terraformOptions)
 }

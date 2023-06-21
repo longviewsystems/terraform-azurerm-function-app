@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/gruntwork-io/terratest/modules/terraform"
 	"log"
 	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/terraform"
 )
 
 func TestTerraform(t *testing.T) {
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "./fixture",
-		VarFiles     : []string{"./fixture/test.tfvars"},
-	}
+		VarFiles:     []string{"./fixture/test.tfvars"}})
 
 	init, err := terraform.InitE(t, terraformOptions)
 

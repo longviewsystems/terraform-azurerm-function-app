@@ -1,13 +1,48 @@
+/***************************************************************/
+/*** Terratest only resources
+/***************************************************************/
 data "azurerm_subscription" "current" {}
 
 data "azurerm_role_definition" "contributor" {
   name = "Contributor"
 }
 
+module "naming" {
+  source  = "Azure/naming/azurerm"
+  version = "0.3.0"
+  prefix = ["terratest"]  
+}
 resource "azurerm_resource_group" "resource_group" {
-  name     = var.resource_group_name
+  name     = module.naming.resource_group.name
   location = var.location
 }
+
+resource "azurerm_service_plan" "service_plan" {
+  name                = module.naming.app_service_plan.name
+  resource_group_name = azurerm_resource_group.resource_group.name
+  location            = azurerm_resource_group.resource_group.location
+  os_type             = "Windows"
+  sku_name            = "Y1"
+}
+
+resource "azurerm_log_analytics_workspace" "function_analytics_workspace" {
+  name                = module.naming.log_analytics_workspace.name
+  location            = azurerm_resource_group.resource_group.location
+  resource_group_name = azurerm_resource_group.resource_group.name
+  retention_in_days   = 30
+}
+
+resource "azurerm_application_insights" "function_insights" {
+  name                = module.naming.application_insights.name
+  location            = azurerm_resource_group.resource_group.location
+  resource_group_name = azurerm_resource_group.resource_group.name
+  application_type    = var.application_type_insights
+  workspace_id        = azurerm_log_analytics_workspace.function_analytics_workspace.id
+}
+
+/***************************************************************/
+/*** Resources to be tested
+/***************************************************************/
 
 resource "random_string" "storage_account_suffix" {
   length  = 6
@@ -16,7 +51,7 @@ resource "random_string" "storage_account_suffix" {
 }
 
 resource "azurerm_storage_account" "function_app" {
-  name                     = lower("${var.function_storage_account_name}${random_string.storage_account_suffix.result}")
+  name                     = module.naming.storage_account.name
   location                 = azurerm_resource_group.resource_group.location
   resource_group_name      = azurerm_resource_group.resource_group.name
   account_kind             = "StorageV2"
@@ -26,16 +61,8 @@ resource "azurerm_storage_account" "function_app" {
 
 }
 
-resource "azurerm_service_plan" "service_plan" {
-  name                = var.service_plan_name
-  resource_group_name = azurerm_resource_group.resource_group.name
-  location            = azurerm_resource_group.resource_group.location
-  os_type             = "Windows"
-  sku_name            = "Y1"
-}
-
 resource "azurerm_windows_function_app" "function_app" {
-  name                        = var.function_name
+  name                        = module.naming.function_app.name
   location                    = azurerm_resource_group.resource_group.location
   resource_group_name         = azurerm_resource_group.resource_group.name
   service_plan_id             = azurerm_service_plan.service_plan.id
@@ -44,14 +71,12 @@ resource "azurerm_windows_function_app" "function_app" {
   functions_extension_version = "~4"
   enabled                     = true
 
-  identity {
-
-    type = var.user_identity_type
-
-  }
   site_config {
-    application_insights_connection_string = try(azurerm_application_insights.function_insights.connection_string, null)
-    application_insights_key               = try(azurerm_application_insights.function_insights.instrumentation_key, null)
+    always_on                              = try(var.function_site_config.always_on, true)
+    ftps_state                             = try(var.function_site_config.ftps_state, "Disabled")
+    application_insights_connection_string = try(var.function_site_config.application_insights_connection_string, null)
+    application_insights_key               = try(var.function_site_config.application_insights_key, null)
+
     application_stack {
       powershell_core_version = "7.2"
     }
@@ -67,27 +92,6 @@ resource "azurerm_windows_function_app" "function_app" {
     ]
   }
 
-}
-
-resource "azurerm_role_assignment" "azure_function" {
-  scope              = data.azurerm_subscription.current.id
-  role_definition_id = "${data.azurerm_subscription.current.id}${data.azurerm_role_definition.contributor.id}"
-  principal_id       = azurerm_windows_function_app.function_app.identity[0].principal_id
-}
-
-resource "azurerm_log_analytics_workspace" "function_analytics_workspace" {
-  name                = "${var.function_name}-analytics-workspace"
-  location            = azurerm_resource_group.resource_group.location
-  resource_group_name = azurerm_resource_group.resource_group.name
-  retention_in_days   = 30
-}
-
-resource "azurerm_application_insights" "function_insights" {
-  name                = var.function_name
-  location            = azurerm_resource_group.resource_group.location
-  resource_group_name = azurerm_resource_group.resource_group.name
-  application_type    = var.application_type_insights
-  workspace_id        = azurerm_log_analytics_workspace.function_analytics_workspace.id
 }
 
 resource "azurerm_monitor_diagnostic_setting" "diagnostic_sets" {

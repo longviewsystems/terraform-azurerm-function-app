@@ -7,7 +7,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 )
 
-func TestTerraformAzDoAgent(t *testing.T) {
+func TestTerraformAzureFunctionTest(t *testing.T) {
 	options := &terraform.Options{
 		TerraformDir: "./fixtures",
 		VarFiles:     []string{"test.tfvars"},

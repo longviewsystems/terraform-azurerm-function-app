@@ -34,10 +34,20 @@ variable "service_plan_sku" {
 /*** Function App Settings
 /***************************************************************/
 
-variable "user_identity_type" {
-  type        = string
-  description = "The type of identity used for the Function App.This maps to the azurerm_windows_function_app identity.type."
-  default     = "SystemAssigned"
+variable "function_site_config" {
+  type = object({
+    always_on                              = bool,
+    ftps_state                             = string,
+    application_insights_connection_string = string,
+    application_insights_key               = string
+  })
+  description = "Application site config for the App Service.  This maps to the azurerm_windows_function_app site_config."
+  default = {
+    always_on                              = false
+    ftps_state                             = "AllAllowed"
+    application_insights_connection_string = null
+    application_insights_key               = null
+  }
 }
 
 /***************************************************************/

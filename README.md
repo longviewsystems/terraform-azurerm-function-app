@@ -8,6 +8,8 @@ Functionality Supported:
 
 Note: 
 
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+
 <!-- BEGIN_TF_DOCS -->
 
 
@@ -55,3 +57,5 @@ No modules.
 | <a name="output_function_id"></a> [function\_id](#output\_function\_id) | ID of the App Service. |
 | <a name="output_function_name"></a> [function\_name](#output\_function\_name) | Name of the App Service. |
 <!-- END_TF_DOCS -->    
+
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

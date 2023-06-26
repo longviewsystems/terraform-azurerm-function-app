@@ -50,8 +50,8 @@ resource "random_string" "storage_account_suffix" {
   upper   = false
 }
 
-resource "azurerm_storage_account" "function_app" {
-  name                     = module.naming.storage_account.name
+resource "azurerm_storage_account" "storage_account" {
+  name                     = "${module.naming.storage_account.name}${random_string.storage_account_suffix.result}"
   location                 = azurerm_resource_group.resource_group.location
   resource_group_name      = azurerm_resource_group.resource_group.name
   account_kind             = "StorageV2"
@@ -66,8 +66,8 @@ resource "azurerm_windows_function_app" "function_app" {
   location                    = azurerm_resource_group.resource_group.location
   resource_group_name         = azurerm_resource_group.resource_group.name
   service_plan_id             = azurerm_service_plan.service_plan.id
-  storage_account_name        = azurerm_storage_account.function_app.name
-  storage_account_access_key  = azurerm_storage_account.function_app.primary_access_key
+  storage_account_name        = azurerm_storage_account.storage_account.name
+  storage_account_access_key  = azurerm_storage_account.storage_account.primary_access_key
   functions_extension_version = "~4"
   enabled                     = true
 
@@ -98,7 +98,7 @@ resource "azurerm_monitor_diagnostic_setting" "diagnostic_sets" {
   count              = var.create_diagnostics ? 1 : 0
   name               = "${var.function_name}-diag-setting"
   target_resource_id = azurerm_windows_function_app.function_app.id
-  storage_account_id = azurerm_storage_account.function_app.id
+  storage_account_id = azurerm_storage_account.storage_account.id
 
   enabled_log {
     category = "FunctionAppLogs"

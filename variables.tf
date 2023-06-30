@@ -27,10 +27,10 @@ variable "tags" {
 /*** Function App Settings
 /***************************************************************/
 
-#variable "service_plan_id" {
-#  type        = string
-#  description = "The ID of the App Service Plan which will host this Function App."
-#}
+variable "service_plan_id" {
+  type        = string
+  description = "The ID of the App Service Plan which will host this Function App."
+}
 
 variable "function_site_config" {
   type = object({

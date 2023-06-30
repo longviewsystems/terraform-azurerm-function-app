@@ -10,7 +10,7 @@ resource "azurerm_storage_account" "storage_account" {
 }
 
 resource "azurerm_service_plan" "app_service_plan" {
-  name                = ${var.function_name}plan
+  name                = "${var.function_name}plan"
   resource_group_name = var.resource_group_name
   location            = var.location
   os_type             = "Windows"

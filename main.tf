@@ -9,11 +9,20 @@ resource "azurerm_storage_account" "storage_account" {
 
 }
 
+resource "azurerm_service_plan" "app_service_plan" {
+  name                = ${var.function_name}plan
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  os_type             = "Windows"
+  sku_name            = "Y1"
+}
+
+
 resource "azurerm_windows_function_app" "function_app" {
   name                        = var.function_name
   location                    = var.location
   resource_group_name         = var.resource_group_name
-  service_plan_id             = var.service_plan_id
+  service_plan_id             = azurerm_service_plan.app_service_plan.id
   storage_account_name        = azurerm_storage_account.storage_account.name
   storage_account_access_key  = azurerm_storage_account.storage_account.primary_access_key
   functions_extension_version = "~4"

@@ -41,7 +41,7 @@ variable "function_site_config" {
   })
   description = "Application site config for the App Service.  This maps to the azurerm_windows_function_app site_config."
   default = {
-    always_on                              = false
+    always_on                              = true
     ftps_state                             = "AllAllowed"
     application_insights_connection_string = null
     application_insights_key               = null

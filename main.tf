@@ -1,7 +1,7 @@
 resource "azurerm_storage_account" "storage_account" {
   name                     = var.function_storage_account_name
-  location                 = azurerm_resource_group.resource_group.location
-  resource_group_name      = azurerm_resource_group.resource_group.name
+  location                 = var.location
+  resource_group_name      = var.resource_group_name
   account_kind             = "StorageV2"
   account_tier             = "Standard"
   account_replication_type = "LRS"

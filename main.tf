@@ -28,6 +28,15 @@ resource "azurerm_windows_function_app" "function_app" {
     application_stack {
       powershell_core_version = "7.2"
     }
+    cors {
+      allowed_origins = ["https://portal.azure.com"]
+    }
+  }
+
+  app_settings = var.fuction_app_settings
+  
+  identity {
+    type = "SystemAssigned"
   }
 
   tags = var.tags

@@ -50,6 +50,15 @@ variable "function_site_config" {
   }
 }
 
+variable "fuction_app_settings" {
+  type = map(string)
+  description = "Application settings for the App Service.  This maps to the azurerm_windows_function_app app_settings."
+  default = {
+    WEBSITE_RUN_FROM_PACKAGE = "1"
+    
+  }
+}
+
 /***************************************************************/
 /*** Function App Storage Account
 /***************************************************************/

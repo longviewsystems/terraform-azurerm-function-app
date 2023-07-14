@@ -100,7 +100,6 @@ resource "azurerm_windows_function_app" "function_app" {
     ]
   }
 
-}
 
 resource "azurerm_monitor_diagnostic_setting" "diagnostic_sets" {
   count              = var.create_diagnostics ? 1 : 0

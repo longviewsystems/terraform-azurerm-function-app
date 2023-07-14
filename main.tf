@@ -32,7 +32,9 @@ resource "azurerm_windows_function_app" "function_app" {
       allowed_origins = ["https://portal.azure.com"]
     }
   }
+
   app_settings = var.fuction_app_settings
+  
   identity {
     type = "SystemAssigned"
   }

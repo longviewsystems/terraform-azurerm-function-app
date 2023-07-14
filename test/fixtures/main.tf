@@ -84,11 +84,13 @@ resource "azurerm_windows_function_app" "function_app" {
       allowed_origins     = ["https://portal.azure.com"]      
     }
   }
+
   app_settings = var.fuction_app_settings
+
   identity {
     type = "SystemAssigned"
   }
-  }
+  
 
   tags = var.tags
 
@@ -99,6 +101,7 @@ resource "azurerm_windows_function_app" "function_app" {
       tags["hidden-link: /app-insights-instrumentation-key"],
     ]
   }
+}
 
 
 resource "azurerm_monitor_diagnostic_setting" "diagnostic_sets" {

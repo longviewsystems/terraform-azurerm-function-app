@@ -76,9 +76,6 @@ variable "create_diagnostics" {
   default     = true
 }
 
-
-
-
 variable "diag_storage_account_id" {
   type        = string
   description = "The ID of the Storage Account where the diagnostics data will be sent."
@@ -95,7 +92,30 @@ variable "private_dns_zone_link_name" {
   description = "The name of the private DNS zone link to create."
 }
 
-variable "function_app_endpoint_name" {
+/***************************************************************/
+
+variable "create_private_endpoint" {
+  type        = bool
+  description = "If the value is false, no private endpoint will be created."
+  default     = true
+}
+
+variable "sa_rg_name" {
   type        = string
-  description = "The name of the function app endpoint to create."
+  description = "The name of the resource group where the storage account is located." 
+}
+
+variable "private_endpoint_subnet_id" {
+  type        = string
+  description = "The ID of the subnet where the private endpoint will be created."
+}
+
+variable "storage_blob_private_dns_zone_ids" {
+  type        = list(string)
+  description = "The IDs of the private DNS zones to link to the private endpoint."
+}
+
+variable "private_dns_zone_group_name" {
+  type        = string
+  description = "The name of the private DNS zone group to create."
 }

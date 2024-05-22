@@ -25,6 +25,29 @@ resource "azurerm_service_plan" "service_plan" {
   sku_name            = "Y1"
 }
 
+# Test module with PE
+module "sa_test_with_pe" {
+  source = "../../"
+
+  function_name = module.naming.function_app.name
+  sa_rg_name = azurerm_resource_group.fixture.name
+  location   = "westus2"
+  service_plan_id = azurerm_service_plan.fixture.id
+  private_dns_zone_group_name = "test"
+  private_dns_zone_link_name = "test"
+  private_dns_zone_name = "test"
+  resource_group_name = azurerm_resource_group.fixture.name
+  function_storage_account_name = azurerm_storage_account.fixture.name
+  diag_storage_account_id = azurerm_storage_account.fixture.id
+
+  create_private_endpoint           = true
+  private_endpoint_subnet_id        = azurerm_subnet.fixture.id
+  storage_blob_private_dns_zone_ids = [azurerm_private_dns_zone.fixture.id]
+
+  tags = var.tags
+
+}
+
 resource "azurerm_log_analytics_workspace" "function_analytics_workspace" {
   name                = module.naming.log_analytics_workspace.name
   location            = azurerm_resource_group.resource_group.location
@@ -70,6 +93,7 @@ resource "azurerm_windows_function_app" "function_app" {
   storage_account_access_key  = azurerm_storage_account.storage_account.primary_access_key
   functions_extension_version = "~4"
   enabled                     = true
+  virtual_network_subnet_id   = azurerm_subnet.vnet_subnet.id
 
   site_config {
     always_on                              = try(var.function_site_config.always_on, true)

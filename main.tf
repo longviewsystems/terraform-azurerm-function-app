@@ -9,42 +9,27 @@ resource "azurerm_storage_account" "storage_account" {
 
 }
 
-resource "azure_virtual_network" "vnet" {
-  name                = var.vnet_name
-  resource_group_name = var.resource_group_name
+resource "azurerm_private_endpoint" "sa" {
+  count               = var.create_private_endpoint ? 1 : 0
+  name                = local.pe_sa_base_name["blob"]
   location            = var.location
-  address_space       = []  # TODO:add this
-  Subnets {  
-    name          = "function_subnet"
-    address_prefixes = ["10.0.1.0/24"]
-  }
-}
-
-resource "azurerm_subnet_private_endpoint_network_policies" "subnet_policy" {
-  name                 = var.vnet_name + "_subnet_policy"
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  subnet_name          = azurerm_virtual_network.vnet.subnets[0].name
-  enforce_private_link_endpoint_network_policies = true
-}
-
-resource "azurerm_private_endpoint" "function_app_endpoint" {
-  name                = var.function_app_endpoint_name
-  subnet_id           = azurerm_virtual_network.vnet.subnets[0].id
-  location            = var.location
-  resource_group_name = var.resource_group_name
-
-  private_service_connection {
-    name                           = "[concat(resourceGroup().name, '/providers/Microsoft.Web/locations/', var.location, '/managedHostingEnvironments/', var.function_app_service_plan_name)]"
-    subresource_names              = ["sites"]
-    is_manual_connection           = false
-  }
+  resource_group_name = var.sa_rg_name
+  subnet_id           = var.private_endpoint_subnet_id
 
   private_dns_zone_group {
-    private_dns_zone_ids = [azurerm_private_dns_zone.private_dns_zone.id]
-    name = "system"
+    name                 = var.private_dns_zone_group_name
+    private_dns_zone_ids = var.storage_blob_private_dns_zone_ids
+  }
+
+  private_service_connection {
+    name                           = local.pe_fp_base_name["blob"]
+    private_connection_resource_id = azurerm_storage_account.fp.id
+    is_manual_connection           = false
+    subresource_names              = ["blob"]
   }
 
   tags = var.tags
+
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "private_dns_zone_link" {

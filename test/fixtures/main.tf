@@ -10,7 +10,7 @@ data "azurerm_role_definition" "contributor" {
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "0.3.0"
-  prefix = ["terratest"]  
+  prefix  = ["terratest"]
 }
 resource "azurerm_resource_group" "resource_group" {
   name     = module.naming.resource_group.name
@@ -41,24 +41,24 @@ resource "azurerm_subnet" "vnet_subnet" {
 }
 
 resource "azurerm_private_dns_zone" "private_dns_zone" {
-  name                 = var.private_dns_zone_name
-  resource_group_name  = var.resource_group_name
+  name                = var.private_dns_zone_name
+  resource_group_name = var.resource_group_name
 }
 
 # Test module with PE
 module "sa_test_with_pe" {
-  source = "../../"
-  resource_group_name = module.naming.resource_group.name
-  function_name = module.naming.function_app.name
-  sa_rg_name = azurerm_resource_group.resource_group.name
-  location   = "westus2"
-  service_plan_id = azurerm_service_plan.service_plan.id
-  private_dns_zone_group_name = "test"
-  private_dns_zone_link_name = "test"
-  private_dns_zone_name = "test"
-  virtual_network_id = azurerm_virtual_network.vnet.id
+  source                        = "../../"
+  resource_group_name           = module.naming.resource_group.name
+  function_name                 = module.naming.function_app.name
+  sa_rg_name                    = azurerm_resource_group.resource_group.name
+  location                      = "westus2"
+  service_plan_id               = azurerm_service_plan.service_plan.id
+  private_dns_zone_group_name   = "test"
+  private_dns_zone_link_name    = "test"
+  private_dns_zone_name         = "test"
+  virtual_network_id            = azurerm_virtual_network.vnet.id
   function_storage_account_name = module.naming.storage_account.name
-  diag_storage_account_id = azurerm_storage_account.storage_account.id
+
 
   create_private_endpoint           = true
   private_endpoint_subnet_id        = azurerm_subnet.vnet_subnet.id
@@ -125,7 +125,7 @@ resource "azurerm_windows_function_app" "function_app" {
       powershell_core_version = "7.2"
     }
     cors {
-      allowed_origins     = ["https://portal.azure.com"]      
+      allowed_origins = ["https://portal.azure.com"]
     }
   }
 
@@ -134,7 +134,7 @@ resource "azurerm_windows_function_app" "function_app" {
   identity {
     type = "SystemAssigned"
   }
-  
+
 
   tags = var.tags
 

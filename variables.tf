@@ -76,12 +76,6 @@ variable "create_diagnostics" {
   default     = true
 }
 
-variable "diag_storage_account_id" {
-  type        = string
-  description = "The ID of the Storage Account where the diagnostics data will be sent."
-}
-
-
 variable "private_dns_zone_name" {
   type        = string
   description = "The name of the private DNS zone to create."
@@ -102,7 +96,7 @@ variable "create_private_endpoint" {
 
 variable "sa_rg_name" {
   type        = string
-  description = "The name of the resource group where the storage account is located." 
+  description = "The name of the resource group where the storage account is located."
 }
 
 variable "private_endpoint_subnet_id" {

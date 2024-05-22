@@ -119,3 +119,8 @@ variable "private_dns_zone_group_name" {
   type        = string
   description = "The name of the private DNS zone group to create."
 }
+
+variable "virtual_network_id" {
+  type        = string
+  description = "The name of the resource group where the resources will be created."
+}

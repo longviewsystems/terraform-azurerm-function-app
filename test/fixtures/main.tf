@@ -25,24 +25,44 @@ resource "azurerm_service_plan" "service_plan" {
   sku_name            = "Y1"
 }
 
+resource "azurerm_virtual_network" "vnet" {
+  name                = module.naming.virtual_network.name
+  resource_group_name = azurerm_resource_group.resource_group.name
+  location            = azurerm_resource_group.resource_group.location
+  address_space       = ["10.1.0.0/16"]
+}
+
+resource "azurerm_subnet" "vnet_subnet" {
+  name                 = "function-app-subnet"
+  resource_group_name  = azurerm_resource_group.resource_group.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.1.0.0/16"]
+
+}
+
+resource "azurerm_private_dns_zone" "private_dns_zone" {
+  name                 = var.private_dns_zone_name
+  resource_group_name  = var.resource_group_name
+}
+
 # Test module with PE
 module "sa_test_with_pe" {
   source = "../../"
-
+  resource_group_name = module.naming.resource_group.name
   function_name = module.naming.function_app.name
-  sa_rg_name = azurerm_resource_group.fixture.name
+  sa_rg_name = azurerm_resource_group.resource_group.name
   location   = "westus2"
-  service_plan_id = azurerm_service_plan.fixture.id
+  service_plan_id = azurerm_service_plan.service_plan.id
   private_dns_zone_group_name = "test"
   private_dns_zone_link_name = "test"
   private_dns_zone_name = "test"
-  resource_group_name = azurerm_resource_group.fixture.name
-  function_storage_account_name = azurerm_storage_account.fixture.name
-  diag_storage_account_id = azurerm_storage_account.fixture.id
+  virtual_network_id = azurerm_virtual_network.vnet.id
+  function_storage_account_name = module.naming.storage_account.name
+  diag_storage_account_id = azurerm_storage_account.storage_account.id
 
   create_private_endpoint           = true
-  private_endpoint_subnet_id        = azurerm_subnet.fixture.id
-  storage_blob_private_dns_zone_ids = [azurerm_private_dns_zone.fixture.id]
+  private_endpoint_subnet_id        = azurerm_subnet.vnet_subnet.id
+  storage_blob_private_dns_zone_ids = [azurerm_private_dns_zone.private_dns_zone.id]
 
   tags = var.tags
 

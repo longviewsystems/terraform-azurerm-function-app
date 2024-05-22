@@ -11,7 +11,7 @@ resource "azurerm_storage_account" "storage_account" {
 
 resource "azurerm_private_endpoint" "sa" {
   count               = var.create_private_endpoint ? 1 : 0
-  name                = local.pe_sa_base_name["blob"]
+  name                = "testprivateendpoint"  #change this
   location            = var.location
   resource_group_name = var.sa_rg_name
   subnet_id           = var.private_endpoint_subnet_id
@@ -22,13 +22,28 @@ resource "azurerm_private_endpoint" "sa" {
   }
 
   private_service_connection {
-    name                           = local.pe_fp_base_name["blob"]
-    private_connection_resource_id = azurerm_storage_account.fp.id
+    name                           = "testpeconnection"   #change this
+    private_connection_resource_id = azurerm_storage_account.storage_account.id
     is_manual_connection           = false
     subresource_names              = ["blob"]
   }
 
   tags = var.tags
+
+}
+
+resource "azurerm_virtual_network" "vnet" {
+  name                 = var.virtual_network_id
+  resource_group_name  = var.resource_group_name
+  location            = var.location
+  address_space       = ["10.1.0.0/16"]
+}
+
+resource "azurerm_subnet" "vnet_subnet" {
+  name                 = "function-app-subnet"
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.1.0.0/16"]
 
 }
 

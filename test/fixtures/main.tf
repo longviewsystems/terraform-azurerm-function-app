@@ -10,7 +10,7 @@ data "azurerm_role_definition" "contributor" {
 module "naming" {
   source  = "Azure/naming/azurerm"
   version = "0.3.0"
-  prefix = ["terratest"]  
+  prefix  = ["terratest"]
 }
 resource "azurerm_resource_group" "resource_group" {
   name     = module.naming.resource_group.name
@@ -23,6 +23,49 @@ resource "azurerm_service_plan" "service_plan" {
   location            = azurerm_resource_group.resource_group.location
   os_type             = "Windows"
   sku_name            = "Y1"
+}
+
+resource "azurerm_virtual_network" "vnet" {
+  name                = module.naming.virtual_network.name
+  resource_group_name = azurerm_resource_group.resource_group.name
+  location            = azurerm_resource_group.resource_group.location
+  address_space       = ["10.1.0.0/16"]
+}
+
+resource "azurerm_subnet" "vnet_subnet" {
+  name                 = "function-app-subnet"
+  resource_group_name  = azurerm_resource_group.resource_group.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.1.0.0/16"]
+
+}
+
+resource "azurerm_private_dns_zone" "private_dns_zone" {
+  name                = var.private_dns_zone_name
+  resource_group_name = var.resource_group_name
+}
+
+# Test module with PE
+module "sa_test_with_pe" {
+  source                        = "../../"
+  resource_group_name           = module.naming.resource_group.name
+  function_name                 = module.naming.function_app.name
+  sa_rg_name                    = azurerm_resource_group.resource_group.name
+  location                      = "westus2"
+  service_plan_id               = azurerm_service_plan.service_plan.id
+  private_dns_zone_group_name   = "test"
+  private_dns_zone_link_name    = "test"
+  private_dns_zone_name         = "test"
+  virtual_network_id            = azurerm_virtual_network.vnet.id
+  function_storage_account_name = module.naming.storage_account.name
+
+
+  create_private_endpoint           = true
+  private_endpoint_subnet_id        = azurerm_subnet.vnet_subnet.id
+  storage_blob_private_dns_zone_ids = [azurerm_private_dns_zone.private_dns_zone.id]
+
+  tags = var.tags
+
 }
 
 resource "azurerm_log_analytics_workspace" "function_analytics_workspace" {
@@ -70,6 +113,7 @@ resource "azurerm_windows_function_app" "function_app" {
   storage_account_access_key  = azurerm_storage_account.storage_account.primary_access_key
   functions_extension_version = "~4"
   enabled                     = true
+  virtual_network_subnet_id   = azurerm_subnet.vnet_subnet.id
 
   site_config {
     always_on                              = try(var.function_site_config.always_on, true)
@@ -81,7 +125,7 @@ resource "azurerm_windows_function_app" "function_app" {
       powershell_core_version = "7.2"
     }
     cors {
-      allowed_origins     = ["https://portal.azure.com"]      
+      allowed_origins = ["https://portal.azure.com"]
     }
   }
 
@@ -90,7 +134,7 @@ resource "azurerm_windows_function_app" "function_app" {
   identity {
     type = "SystemAssigned"
   }
-  
+
 
   tags = var.tags
 

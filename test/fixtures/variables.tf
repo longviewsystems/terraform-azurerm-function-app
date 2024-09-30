@@ -83,3 +83,8 @@ variable "application_type_insights" {
   default     = "other"
 }
 
+variable "private_dns_zone_name" {
+  type        = string
+  description = "Name of the private DNS zone."
+  default    = "private.dns"
+}

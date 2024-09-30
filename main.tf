@@ -9,6 +9,57 @@ resource "azurerm_storage_account" "storage_account" {
 
 }
 
+resource "azurerm_private_endpoint" "sa" {
+  count               = var.create_private_endpoint ? 1 : 0
+  name                = "testprivateendpoint" #change this
+  location            = var.location
+  resource_group_name = var.sa_rg_name
+  subnet_id           = var.private_endpoint_subnet_id
+
+  private_dns_zone_group {
+    name                 = var.private_dns_zone_group_name
+    private_dns_zone_ids = var.storage_blob_private_dns_zone_ids
+  }
+
+  private_service_connection {
+    name                           = "testpeconnection" #change this
+    private_connection_resource_id = azurerm_storage_account.storage_account.id
+    is_manual_connection           = false
+    subresource_names              = ["blob"]
+  }
+
+  tags = var.tags
+
+}
+
+resource "azurerm_virtual_network" "vnet" {
+  name                = var.virtual_network_id
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  address_space       = ["10.1.0.0/16"]
+}
+
+resource "azurerm_subnet" "vnet_subnet" {
+  name                 = "function-app-subnet"
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.1.0.0/16"]
+
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "private_dns_zone_link" {
+  name                  = var.private_dns_zone_link_name
+  resource_group_name   = var.resource_group_name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
+  private_dns_zone_name = azurerm_private_dns_zone.private_dns_zone.name
+}
+
+resource "azurerm_private_dns_zone" "private_dns_zone" {
+  name                = var.private_dns_zone_name
+  resource_group_name = var.resource_group_name
+}
+
+
 resource "azurerm_windows_function_app" "function_app" {
   name                        = var.function_name
   location                    = var.location
@@ -34,7 +85,7 @@ resource "azurerm_windows_function_app" "function_app" {
   }
 
   app_settings = var.fuction_app_settings
-  
+
   identity {
     type = "SystemAssigned"
   }

@@ -76,3 +76,45 @@ variable "create_diagnostics" {
   default     = true
 }
 
+variable "private_dns_zone_name" {
+  type        = string
+  description = "The name of the private DNS zone to create."
+}
+
+variable "private_dns_zone_link_name" {
+  type        = string
+  description = "The name of the private DNS zone link to create."
+}
+
+/***************************************************************/
+
+variable "create_private_endpoint" {
+  type        = bool
+  description = "If the value is false, no private endpoint will be created."
+  default     = true
+}
+
+variable "sa_rg_name" {
+  type        = string
+  description = "The name of the resource group where the storage account is located."
+}
+
+variable "private_endpoint_subnet_id" {
+  type        = string
+  description = "The ID of the subnet where the private endpoint will be created."
+}
+
+variable "storage_blob_private_dns_zone_ids" {
+  type        = list(string)
+  description = "The IDs of the private DNS zones to link to the private endpoint."
+}
+
+variable "private_dns_zone_group_name" {
+  type        = string
+  description = "The name of the private DNS zone group to create."
+}
+
+variable "virtual_network_id" {
+  type        = string
+  description = "The name of the resource group where the resources will be created."
+}

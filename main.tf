@@ -9,6 +9,7 @@ resource "azurerm_storage_account" "storage_account" {
 
 }
 
+# To support for Private Endpoint
 resource "azurerm_private_endpoint" "sa" {
   count               = var.create_private_endpoint ? 1 : 0
   name                = "testprivateendpoint" #change this
